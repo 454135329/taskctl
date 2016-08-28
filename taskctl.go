@@ -21,7 +21,7 @@ func writeStatus(task string, status string) {
 	filename := getPath(task)
 	data := status + "|" + "time" + "\n"
 
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	check(err)
 
 	defer f.Close()
