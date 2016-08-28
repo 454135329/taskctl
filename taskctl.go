@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/user"
+	"time"
 )
 
 func check(err error) {
@@ -18,8 +19,9 @@ func getPath(task string) string {
 }
 
 func writeStatus(task string, status string) {
+	curTime := time.Now()
 	filename := getPath(task)
-	data := status + "|" + "time" + "\n"
+	data := status + "|" + curTime.Format(time.RFC3339) + "\n"
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	check(err)
