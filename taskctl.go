@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
+	"strings"
 	"time"
 )
 
@@ -32,8 +35,23 @@ func writeStatus(task string, status string) {
 	check(err)
 }
 
+func getStatuses(task string) []string {
+	filename := getPath(task)
+	content, err := ioutil.ReadFile(filename)
+	check(err)
+
+	return strings.Split(string(content), "\n")
+}
+
+func getCurrentStatus(task string) string {
+	statuses := getStatuses(task)
+
+	return statuses[len(statuses)-2]
+}
+
 func main() {
 	task := "ASS-2103"
-	status := "START"
-	writeStatus(task, status)
+	status := getCurrentStatus(task)
+
+	fmt.Println(status)
 }
