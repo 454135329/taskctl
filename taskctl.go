@@ -43,15 +43,16 @@ func getStatuses(task string) []string {
 	return strings.Split(string(content), "\n")
 }
 
-func getCurrentStatus(task string) string {
+func getCurrentStatus(task string) (string, string) {
 	statuses := getStatuses(task)
+	status := strings.Split(statuses[len(statuses)-2], "|")
 
-	return statuses[len(statuses)-2]
+	return status[0], status[1]
 }
 
 func main() {
 	task := "ASS-2103"
-	status := getCurrentStatus(task)
+	status, time := getCurrentStatus(task)
 
-	fmt.Println(status)
+	fmt.Println("Switched to \"" + status + "\" at " + time)
 }
