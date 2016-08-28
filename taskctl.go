@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -22,6 +23,8 @@ func getPath(task string) string {
 }
 
 func writeStatus(task string, status string) {
+	checkStatys(task, status)
+
 	curTime := time.Now()
 	filename := getPath(task)
 	data := status + "|" + curTime.Format(time.RFC3339) + "\n"
@@ -33,6 +36,15 @@ func writeStatus(task string, status string) {
 
 	_, err = f.WriteString(data)
 	check(err)
+}
+
+func checkStatys(task string, status string) {
+	currStatus, _ := getCurrentStatus(task)
+
+	if currStatus == status {
+		err := errors.New("This task is already in " + status + " status")
+		panic(err)
+	}
 }
 
 func getStatuses(task string) []string {
@@ -55,4 +67,6 @@ func main() {
 	status, time := getCurrentStatus(task)
 
 	fmt.Println("Switched to \"" + status + "\" at " + time)
+
+	writeStatus(task, status)
 }
