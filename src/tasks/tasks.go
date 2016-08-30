@@ -1,4 +1,4 @@
-package taskctl
+package tasks
 
 import (
 	"errors"
