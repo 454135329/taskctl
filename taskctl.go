@@ -16,10 +16,19 @@ func check(err error) {
 	}
 }
 
+func checkFile(path string) {
+	_, err := os.Stat(path)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func getPath(task string) string {
 	usr, _ := user.Current()
+	path := usr.HomeDir + "/.taskctl/tasks/" + task + ".txt"
+	checkFile(path)
 
-	return usr.HomeDir + "/.taskctl/tasks/" + task + ".txt"
+	return path
 }
 
 func writeStatus(task string, status string) {
