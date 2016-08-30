@@ -1,8 +1,7 @@
-package main
+package taskctl
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -16,39 +15,25 @@ func check(err error) {
 	}
 }
 
-func checkFile(path string) {
+func fileExists(path string) bool {
 	_, err := os.Stat(path)
+
 	if err != nil {
-		panic(err)
+		return false
 	}
+
+	return true
 }
 
 func getPath(task string) string {
 	usr, _ := user.Current()
 	path := usr.HomeDir + "/.taskctl/tasks/" + task + ".txt"
-	checkFile(path)
 
 	return path
 }
 
-func writeStatus(task string, status string) {
-	checkStatys(task, status)
-
-	curTime := time.Now()
-	filename := getPath(task)
-	data := status + "|" + curTime.Format(time.RFC3339) + "\n"
-
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	check(err)
-
-	defer f.Close()
-
-	_, err = f.WriteString(data)
-	check(err)
-}
-
 func checkStatys(task string, status string) {
-	currStatus, _ := getCurrentStatus(task)
+	currStatus, _ := GetCurrentStatus(task)
 
 	if currStatus == status {
 		err := errors.New("This task is already in " + status + " status")
@@ -64,18 +49,33 @@ func getStatuses(task string) []string {
 	return strings.Split(string(content), "\n")
 }
 
-func getCurrentStatus(task string) (string, string) {
+// GetCurrentStatus returns current status of given task
+func GetCurrentStatus(task string) (string, string) {
 	statuses := getStatuses(task)
 	status := strings.Split(statuses[len(statuses)-2], "|")
 
 	return status[0], status[1]
 }
 
-func main() {
-	task := "ASS-2103"
-	status, time := getCurrentStatus(task)
+// WriteStatus writes task status to file
+func WriteStatus(task string, status string) {
+	filename := getPath(task)
 
-	fmt.Println("Switched to \"" + status + "\" at " + time)
+	if fileExists(filename) {
+		checkStatys(task, status)
+	} else if status == "STOP" {
+		err := errors.New("This task does not exist")
+		panic(err)
+	}
 
-	writeStatus(task, status)
+	curTime := time.Now()
+	data := status + "|" + curTime.Format(time.RFC3339) + "\n"
+
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	check(err)
+
+	defer f.Close()
+
+	_, err = f.WriteString(data)
+	check(err)
 }
