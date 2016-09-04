@@ -2,11 +2,11 @@ package tasks
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -92,15 +92,13 @@ func ListTasks() [][]string {
 		log.Fatal(err)
 	}
 
-	for _, file := range files {
-		fmt.Println(file.Name())
-	}
+	data := make([][]string, len(files))
 
-	data := [][]string{
-		[]string{"TAR-100", "START", "10 h"},
-		[]string{"TAR-101", "START", "2 h"},
-		[]string{"TAR-103", "START", "4 h"},
-		[]string{"TAR-99", "START", "5 h"},
+	for i, file := range files {
+		filename := file.Name()
+		name := strings.TrimSuffix(filename, filepath.Ext(filename))
+
+		data[i] = []string{name, "START", "10 h"}
 	}
 
 	return data
