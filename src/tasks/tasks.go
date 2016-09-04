@@ -2,7 +2,9 @@ package tasks
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/user"
 	"strings"
@@ -25,11 +27,14 @@ func fileExists(path string) bool {
 	return true
 }
 
-func getPath(task string) string {
+func getTasksDir() string {
 	usr, _ := user.Current()
-	path := usr.HomeDir + "/.taskctl/tasks/" + task + ".txt"
 
-	return path
+	return usr.HomeDir + "/.taskctl/tasks"
+}
+
+func getPath(task string) string {
+	return getTasksDir() + "/" + task + ".txt"
 }
 
 func checkStatys(task string, status string) {
@@ -78,4 +83,25 @@ func WriteStatus(task string, status string) {
 
 	_, err = f.WriteString(data)
 	check(err)
+}
+
+// ListTasks return list of all task with logged time
+func ListTasks() [][]string {
+	files, err := ioutil.ReadDir(getTasksDir())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name())
+	}
+
+	data := [][]string{
+		[]string{"TAR-100", "START", "10 h"},
+		[]string{"TAR-101", "START", "2 h"},
+		[]string{"TAR-103", "START", "4 h"},
+		[]string{"TAR-99", "START", "5 h"},
+	}
+
+	return data
 }

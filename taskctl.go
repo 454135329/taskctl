@@ -37,17 +37,12 @@ func main() {
 			Name:  "list",
 			Usage: "list all tasks",
 			Action: func(c *cli.Context) error {
-				data := [][]string{
-					[]string{"TAR-100", "10 h"},
-					[]string{"TAR-101", "2 h"},
-					[]string{"TAR-103", "4 h"},
-					[]string{"TAR-99", "5 h"},
-				}
+				data := tasks.ListTasks()
 
 				table := tablewriter.NewWriter(os.Stdout)
 				table.SetRowLine(true)
 				table.SetRowSeparator("-")
-				table.SetHeader([]string{"Task", "Logged time"})
+				table.SetHeader([]string{"Task", "Status", "Logged time"})
 
 				for _, v := range data {
 					table.Append(v)
