@@ -38,7 +38,7 @@ func getPath(task string) string {
 }
 
 func checkStatys(task string, status string) {
-	currStatus, _ := GetCurrentStatus(task)
+	currStatus, _ := getCurrentStatus(task)
 
 	if currStatus == status {
 		err := errors.New("This task is already in " + status + " status")
@@ -54,8 +54,7 @@ func getStatuses(task string) []string {
 	return strings.Split(string(content), "\n")
 }
 
-// GetCurrentStatus returns current status of given task
-func GetCurrentStatus(task string) (string, string) {
+func getCurrentStatus(task string) (string, string) {
 	statuses := getStatuses(task)
 	status := strings.Split(statuses[len(statuses)-2], "|")
 
@@ -97,8 +96,9 @@ func ListTasks() [][]string {
 	for i, file := range files {
 		filename := file.Name()
 		name := strings.TrimSuffix(filename, filepath.Ext(filename))
+		status, _ := getCurrentStatus(name)
 
-		data[i] = []string{name, "START", "10 h"}
+		data[i] = []string{name, status, "10 h"}
 	}
 
 	return data
