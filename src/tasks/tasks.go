@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -25,6 +26,13 @@ func check(err error) {
 
 func getCurrentDateTime() string {
 	return time.Now().Format(time.RFC3339)
+}
+
+func parseDateTime(dateTime string) time.Time {
+	parsedTime, err := time.Parse(time.RFC3339, dateTime)
+	check(err)
+
+	return parsedTime
 }
 
 func fileExists(path string) bool {
@@ -93,8 +101,27 @@ func getCurrentStatus(history [][]string) (string, string) {
 	return status[0], status[1]
 }
 
-func getSpentTime(history [][]string) string {
-	return "10 h"
+func formatDuration(seconds int) string {
+	return strconv.Itoa(seconds) + " s"
+}
+
+func getSpentTime(history [][]string) int {
+	if len(history)%2 != 0 {
+		err := errors.New("Wrong history records number")
+		panic(err)
+	}
+
+	spentTime := 0
+
+	for i := 0; i < len(history); i += 2 {
+		startTime := parseDateTime(history[i][1])
+		endTime := parseDateTime(history[i+1][1])
+		timeDiff := endTime.Sub(startTime)
+
+		spentTime += int(timeDiff.Seconds())
+	}
+
+	return spentTime
 }
 
 // WriteStatus writes task status to file
@@ -137,7 +164,7 @@ func ListTasks() [][]string {
 		history = fillHistoryGap(history)
 		spentTime := getSpentTime(history)
 
-		data[i] = []string{task, status, spentTime}
+		data[i] = []string{task, status, formatDuration(spentTime)}
 	}
 
 	return data
