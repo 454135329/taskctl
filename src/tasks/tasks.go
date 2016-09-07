@@ -43,7 +43,7 @@ func getTasksDir() string {
 	return usr.HomeDir + "/.taskctl/tasks"
 }
 
-func getPath(task string) string {
+func getTaskPath(task string) string {
 	return getTasksDir() + "/" + task + ".txt"
 }
 
@@ -58,7 +58,7 @@ func checkStatys(task string, status string) {
 }
 
 func getStatuses(task string) [][]string {
-	filename := getPath(task)
+	filename := getTaskPath(task)
 	content, err := ioutil.ReadFile(filename)
 	check(err)
 
@@ -95,7 +95,7 @@ func getCurrentStatus(statuses [][]string) (string, string) {
 
 // WriteStatus writes task status to file
 func WriteStatus(task string, status string) {
-	filename := getPath(task)
+	filename := getTaskPath(task)
 
 	if fileExists(filename) {
 		checkStatys(task, status)
@@ -127,8 +127,10 @@ func ListTasks() [][]string {
 	for i, file := range files {
 		filename := file.Name()
 		task := strings.TrimSuffix(filename, filepath.Ext(filename))
+
 		statuses := getStatuses(task)
 		status, _ := getCurrentStatus(statuses)
+		statuses = fillStatusesGap(statuses)
 
 		data[i] = []string{task, status, "10 h"}
 	}
