@@ -11,10 +11,20 @@ import (
 	"time"
 )
 
+// StartStatus represents status for started task
+const StartStatus = "START"
+
+// StopStatus represents status for stopped task
+const StopStatus = "STOP"
+
 func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getCurrentDateTime() string {
+	return time.Now().Format(time.RFC3339)
 }
 
 func fileExists(path string) bool {
@@ -38,7 +48,8 @@ func getPath(task string) string {
 }
 
 func checkStatys(task string, status string) {
-	currStatus, _ := getCurrentStatus(task)
+	statuses := getStatuses(task)
+	currStatus, _ := getCurrentStatus(statuses)
 
 	if currStatus == status {
 		err := errors.New("This task is already in " + status + " status")
@@ -66,8 +77,17 @@ func getStatuses(task string) [][]string {
 	return statuses
 }
 
-func getCurrentStatus(task string) (string, string) {
-	statuses := getStatuses(task)
+func fillStatusesGap(statuses [][]string) [][]string {
+	currentStatus, _ := getCurrentStatus(statuses)
+
+	if currentStatus == StartStatus {
+		statuses = append(statuses, []string{StopStatus, getCurrentDateTime()})
+	}
+
+	return statuses
+}
+
+func getCurrentStatus(statuses [][]string) (string, string) {
 	status := statuses[len(statuses)-1]
 
 	return status[0], status[1]
@@ -79,13 +99,12 @@ func WriteStatus(task string, status string) {
 
 	if fileExists(filename) {
 		checkStatys(task, status)
-	} else if status == "STOP" {
+	} else if status == StopStatus {
 		err := errors.New("This task does not exist")
 		panic(err)
 	}
 
-	curTime := time.Now()
-	data := status + "|" + curTime.Format(time.RFC3339) + "\n"
+	data := status + "|" + getCurrentDateTime() + "\n"
 
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	check(err)
@@ -107,10 +126,11 @@ func ListTasks() [][]string {
 
 	for i, file := range files {
 		filename := file.Name()
-		name := strings.TrimSuffix(filename, filepath.Ext(filename))
-		status, _ := getCurrentStatus(name)
+		task := strings.TrimSuffix(filename, filepath.Ext(filename))
+		statuses := getStatuses(task)
+		status, _ := getCurrentStatus(statuses)
 
-		data[i] = []string{name, status, "10 h"}
+		data[i] = []string{task, status, "10 h"}
 	}
 
 	return data
