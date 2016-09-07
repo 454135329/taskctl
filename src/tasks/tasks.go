@@ -12,11 +12,18 @@ import (
 	"time"
 )
 
-// StartStatus represents status for started task
-const StartStatus = "START"
+const (
+	// StartStatus represents status for started task
+	StartStatus = "START"
+	// StopStatus represents status for stopped task
+	StopStatus = "STOP"
+)
 
-// StopStatus represents status for stopped task
-const StopStatus = "STOP"
+var messages = map[string]string{
+	"START": "In progress",
+	"STOP":  "Stopped",
+	"DONE":  "Completed",
+}
 
 func check(err error) {
 	if err != nil {
@@ -167,7 +174,7 @@ func ListTasks() [][]string {
 		history = fillHistoryGap(history)
 		spentTime := getSpentTime(history)
 
-		data[i] = []string{task, status, formatDuration(spentTime)}
+		data[i] = []string{task, messages[status], formatDuration(spentTime)}
 	}
 
 	return data
