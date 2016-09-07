@@ -51,12 +51,18 @@ func getStatuses(task string) []string {
 	content, err := ioutil.ReadFile(filename)
 	check(err)
 
-	return strings.Split(string(content), "\n")
+	lines := strings.Split(string(content), "\n")
+
+	if lines[len(lines)-1] == "" && len(lines) > 0 {
+		lines = lines[:len(lines)-1]
+	}
+
+	return lines
 }
 
 func getCurrentStatus(task string) (string, string) {
 	statuses := getStatuses(task)
-	status := strings.Split(statuses[len(statuses)-2], "|")
+	status := strings.Split(statuses[len(statuses)-1], "|")
 
 	return status[0], status[1]
 }
