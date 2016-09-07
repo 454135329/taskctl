@@ -102,7 +102,10 @@ func getCurrentStatus(history [][]string) (string, string) {
 }
 
 func formatDuration(seconds int) string {
-	return strconv.Itoa(seconds) + " s"
+	hours := seconds / 3600
+	minutes := seconds % 3600 / 60
+
+	return strconv.Itoa(hours) + " h " + strconv.Itoa(minutes) + " m"
 }
 
 func getSpentTime(history [][]string) int {
