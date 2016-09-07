@@ -46,7 +46,7 @@ func checkStatys(task string, status string) {
 	}
 }
 
-func getStatuses(task string) []string {
+func getStatuses(task string) [][]string {
 	filename := getPath(task)
 	content, err := ioutil.ReadFile(filename)
 	check(err)
@@ -57,12 +57,18 @@ func getStatuses(task string) []string {
 		lines = lines[:len(lines)-1]
 	}
 
-	return lines
+	statuses := make([][]string, len(lines))
+
+	for i, status := range lines {
+		statuses[i] = strings.Split(status, "|")
+	}
+
+	return statuses
 }
 
 func getCurrentStatus(task string) (string, string) {
 	statuses := getStatuses(task)
-	status := strings.Split(statuses[len(statuses)-1], "|")
+	status := statuses[len(statuses)-1]
 
 	return status[0], status[1]
 }
