@@ -48,8 +48,8 @@ func getTaskPath(task string) string {
 }
 
 func checkStatys(task string, status string) {
-	statuses := getStatuses(task)
-	currStatus, _ := getCurrentStatus(statuses)
+	history := getHistory(task)
+	currStatus, _ := getCurrentStatus(history)
 
 	if currStatus == status {
 		err := errors.New("This task is already in " + status + " status")
@@ -57,7 +57,7 @@ func checkStatys(task string, status string) {
 	}
 }
 
-func getStatuses(task string) [][]string {
+func getHistory(task string) [][]string {
 	filename := getTaskPath(task)
 	content, err := ioutil.ReadFile(filename)
 	check(err)
@@ -68,29 +68,33 @@ func getStatuses(task string) [][]string {
 		lines = lines[:len(lines)-1]
 	}
 
-	statuses := make([][]string, len(lines))
+	history := make([][]string, len(lines))
 
 	for i, status := range lines {
-		statuses[i] = strings.Split(status, "|")
+		history[i] = strings.Split(status, "|")
 	}
 
-	return statuses
+	return history
 }
 
-func fillStatusesGap(statuses [][]string) [][]string {
-	currentStatus, _ := getCurrentStatus(statuses)
+func fillHistoryGap(history [][]string) [][]string {
+	currentStatus, _ := getCurrentStatus(history)
 
 	if currentStatus == StartStatus {
-		statuses = append(statuses, []string{StopStatus, getCurrentDateTime()})
+		history = append(history, []string{StopStatus, getCurrentDateTime()})
 	}
 
-	return statuses
+	return history
 }
 
-func getCurrentStatus(statuses [][]string) (string, string) {
-	status := statuses[len(statuses)-1]
+func getCurrentStatus(history [][]string) (string, string) {
+	status := history[len(history)-1]
 
 	return status[0], status[1]
+}
+
+func getSpentTime(history [][]string) string {
+	return "10 h"
 }
 
 // WriteStatus writes task status to file
@@ -128,11 +132,12 @@ func ListTasks() [][]string {
 		filename := file.Name()
 		task := strings.TrimSuffix(filename, filepath.Ext(filename))
 
-		statuses := getStatuses(task)
-		status, _ := getCurrentStatus(statuses)
-		statuses = fillStatusesGap(statuses)
+		history := getHistory(task)
+		status, _ := getCurrentStatus(history)
+		history = fillHistoryGap(history)
+		spentTime := getSpentTime(history)
 
-		data[i] = []string{task, status, "10 h"}
+		data[i] = []string{task, status, spentTime}
 	}
 
 	return data
