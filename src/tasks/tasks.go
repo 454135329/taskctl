@@ -12,6 +12,19 @@ import (
 	"time"
 )
 
+// Event describes change of status
+type Event struct {
+	Status string
+	Time   time.Time
+}
+
+// Task is data structure to describe project task
+type Task struct {
+	Name    string
+	Status  string
+	History []Event
+}
+
 const (
 	// StartStatus represents status for started task
 	StartStatus = "START"
