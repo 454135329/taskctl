@@ -17,19 +17,44 @@ func main() {
 			Name:  "start",
 			Usage: "start working on a task",
 			Action: func(c *cli.Context) error {
-				task := c.Args().First()
-				tasks.WriteStatus(task, "START")
-				fmt.Println("started task: ", task)
+				name := c.Args().First()
+
+				task := tasks.OpenTask(name)
+				defer task.Close()
+
+				task.Start()
+
+				fmt.Println("started task: ", name)
 				return nil
 			},
 		},
 		{
 			Name:  "stop",
+			Usage: "stop working on a task",
+			Action: func(c *cli.Context) error {
+				name := c.Args().First()
+
+				task := tasks.OpenTask(name)
+				defer task.Close()
+
+				task.Stop()
+
+				fmt.Println("stopped task: ", name)
+				return nil
+			},
+		},
+		{
+			Name:  "done",
 			Usage: "complete a task",
 			Action: func(c *cli.Context) error {
-				task := c.Args().First()
-				tasks.WriteStatus(task, "STOP")
-				fmt.Println("stopped task: ", task)
+				name := c.Args().First()
+
+				task := tasks.OpenTask(name)
+				defer task.Close()
+
+				task.Done()
+
+				fmt.Println("completed task: ", name)
 				return nil
 			},
 		},
@@ -37,17 +62,15 @@ func main() {
 			Name:  "list",
 			Usage: "list all tasks",
 			Action: func(c *cli.Context) error {
-				data := tasks.ListTasks()
-
 				table := tablewriter.NewWriter(os.Stdout)
 				table.SetRowLine(true)
 				table.SetRowSeparator("-")
 				table.SetHeader([]string{"Task", "Status", "Logged time"})
 
-				for _, v := range data {
-					table.Append(v)
-				}
+				table.Append([]string{"TSK-001", "In progress", "10 h"})
+
 				table.Render()
+
 				return nil
 			},
 		},
