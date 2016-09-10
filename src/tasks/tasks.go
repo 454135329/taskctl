@@ -25,17 +25,36 @@ type Task struct {
 	History []Event
 }
 
-const (
-	// StartStatus represents status for started task
-	StartStatus = "START"
-	// StopStatus represents status for stopped task
-	StopStatus = "STOP"
-)
-
 var messages = map[string]string{
-	"START": "In progress",
-	"STOP":  "Stopped",
-	"DONE":  "Completed",
+	"todo":  "To do",
+	"start": "In progress",
+	"stop":  "Stopped",
+	"done":  "Completed",
+}
+
+// OpenTask reads existing task or create new one
+func OpenTask(name string) {
+
+}
+
+// Close writes changes to file
+func (task Task) Close() {
+
+}
+
+// Start changes status to in progress
+func (task *Task) Start() {
+
+}
+
+// Stop changes status to stopped
+func (task *Task) Stop() {
+
+}
+
+// Done changes status to done
+func (task *Task) Done() {
+
 }
 
 func check(err error) {
@@ -108,8 +127,8 @@ func getHistory(task string) [][]string {
 func fillHistoryGap(history [][]string) [][]string {
 	currentStatus, _ := getCurrentStatus(history)
 
-	if currentStatus == StartStatus {
-		history = append(history, []string{StopStatus, getCurrentDateTime()})
+	if currentStatus == "start" {
+		history = append(history, []string{"stop", getCurrentDateTime()})
 	}
 
 	return history
@@ -153,7 +172,7 @@ func WriteStatus(task string, status string) {
 
 	if fileExists(filename) {
 		checkStatys(task, status)
-	} else if status == StopStatus {
+	} else if status == "stop" {
 		err := errors.New("This task does not exist")
 		panic(err)
 	}
