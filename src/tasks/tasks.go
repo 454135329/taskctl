@@ -89,7 +89,23 @@ func (task *Task) Stop() {
 
 // Done changes status to done
 func (task *Task) Done() {
-	task.Status = "done"
+	status := "done"
+	task.Status = status
+
+	length := len(task.History)
+	if length > 0 && task.History[length-1].Status == status {
+		err := errors.New("This task already has " + messages[status] + " status")
+		check(err)
+	}
+
+	if length > 0 && task.History[length-1].Status == "stop" {
+		task.History[length-1].Status = status
+		return
+	}
+
+	event := Event{Status: status, Time: getCurrentDateTime()}
+
+	task.History = append(task.History, event)
 }
 
 func check(err error) {
