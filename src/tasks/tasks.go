@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -35,7 +34,12 @@ func OpenTask(name string) Task {
 	path := getTaskPath(name)
 
 	if fileExists(path) {
-		fmt.Println("exists")
+		file, _ := ioutil.ReadFile(path)
+
+		var task Task
+		json.Unmarshal(file, &task)
+
+		return task
 	}
 
 	return Task{Name: name, Status: "todo"}
