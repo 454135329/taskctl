@@ -113,7 +113,7 @@ func getTasksDir() string {
 func getTaskPath(name string) string {
 	name = strings.ToUpper(name)
 
-	return getTasksDir() + "/" + name + ".txt"
+	return getTasksDir() + "/" + name + ".json"
 }
 
 func formatDuration(seconds int) string {
