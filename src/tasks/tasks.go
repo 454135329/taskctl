@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -104,6 +106,15 @@ func (task *Task) Done() {
 	task.History = append(task.History, event)
 }
 
+// ToArray returns array with task name, status and logged time
+func (task Task) ToArray() []string {
+	return []string{
+		task.Name,
+		messages[task.Status],
+		formatDuration(task.getLoggedTime()),
+	}
+}
+
 func (task Task) getLoggedTime() int {
 	history := task.History
 
@@ -123,4 +134,21 @@ func (task Task) getLoggedTime() int {
 	}
 
 	return loggedTime
+}
+
+// LoadTasks scans tasks storage and loads all tasks
+func LoadTasks() []Task {
+	files, err := ioutil.ReadDir(getTasksDir())
+	check(err)
+
+	tasks := make([]Task, len(files))
+
+	for i, file := range files {
+		fileName := file.Name()
+		taskName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+
+		tasks[i] = OpenTask(taskName)
+	}
+
+	return tasks
 }

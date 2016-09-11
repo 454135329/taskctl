@@ -67,7 +67,9 @@ func main() {
 				table.SetRowSeparator("-")
 				table.SetHeader([]string{"Task", "Status", "Logged time"})
 
-				table.Append([]string{"TSK-001", "In progress", "10 h"})
+				for _, task := range tasks.LoadTasks() {
+					table.Append(task.ToArray())
+				}
 
 				table.Render()
 
