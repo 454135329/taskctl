@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/user"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -42,7 +43,7 @@ func OpenTask(name string) Task {
 		return task
 	}
 
-	return Task{Name: name, Status: "todo"}
+	return Task{Name: name, Status: "todo", History: []Event{}}
 }
 
 // Close writes changes to file
@@ -102,6 +103,8 @@ func getTasksDir() string {
 }
 
 func getTaskPath(name string) string {
+	name = strings.ToUpper(name)
+
 	return getTasksDir() + "/" + name + ".txt"
 }
 
