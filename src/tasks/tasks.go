@@ -115,8 +115,18 @@ func (task Task) ToArray() []string {
 	}
 }
 
-func (task Task) getLoggedTime() int {
+func (task Task) fillHistoryGap() []Event {
 	history := task.History
+
+	if task.Status == "start" {
+		history = append(history, Event{"tmp", getCurrentDateTime()})
+	}
+
+	return history
+}
+
+func (task Task) getLoggedTime() int {
+	history := task.fillHistoryGap()
 
 	if len(history)%2 != 0 {
 		err := errors.New("Wrong history records number")
@@ -141,13 +151,14 @@ func LoadTasks() []Task {
 	files, err := ioutil.ReadDir(getTasksDir())
 	check(err)
 
-	tasks := make([]Task, len(files))
+	var tasks []Task
 
-	for i, file := range files {
+	for _, file := range files {
 		fileName := file.Name()
-		taskName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+		fileExtension := filepath.Ext(fileName)
+		taskName := strings.TrimSuffix(fileName, fileExtension)
 
-		tasks[i] = OpenTask(taskName)
+		tasks = append(tasks, OpenTask(taskName))
 	}
 
 	return tasks
