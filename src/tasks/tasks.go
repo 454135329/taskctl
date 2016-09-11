@@ -108,6 +108,27 @@ func (task *Task) Done() {
 	task.History = append(task.History, event)
 }
 
+func (task Task) getLoggedTime() int {
+	history := task.History
+
+	if len(history)%2 != 0 {
+		err := errors.New("Wrong history records number")
+		panic(err)
+	}
+
+	loggedTime := 0
+
+	for i := 0; i < len(history); i += 2 {
+		startTime := history[i].Time
+		endTime := history[i+1].Time
+		timeDiff := endTime.Sub(startTime)
+
+		loggedTime += int(timeDiff.Seconds())
+	}
+
+	return loggedTime
+}
+
 func check(err error) {
 	if err != nil {
 		panic(err)
@@ -116,13 +137,6 @@ func check(err error) {
 
 func getCurrentDateTime() time.Time {
 	return time.Now()
-}
-
-func parseDateTime(dateTime string) time.Time {
-	parsedTime, err := time.Parse(time.RFC3339, dateTime)
-	check(err)
-
-	return parsedTime
 }
 
 func fileExists(path string) bool {
