@@ -56,12 +56,20 @@ func (task *Task) Close() {
 
 // Start changes status to in progress
 func (task *Task) Start() {
-	task.Status = "start"
+	status := "start"
+	event := Event{Status: status, Time: getCurrentDateTime()}
+
+	task.Status = status
+	task.History = append(task.History, event)
 }
 
 // Stop changes status to stopped
 func (task *Task) Stop() {
-	task.Status = "stop"
+	status := "stpp"
+	event := Event{Status: status, Time: getCurrentDateTime()}
+
+	task.Status = status
+	task.History = append(task.History, event)
 }
 
 // Done changes status to done
@@ -75,8 +83,8 @@ func check(err error) {
 	}
 }
 
-func getCurrentDateTime() string {
-	return time.Now().Format(time.RFC3339)
+func getCurrentDateTime() time.Time {
+	return time.Now()
 }
 
 func parseDateTime(dateTime string) time.Time {
