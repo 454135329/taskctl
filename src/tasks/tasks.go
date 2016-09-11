@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -57,6 +58,13 @@ func (task *Task) Close() {
 // Start changes status to in progress
 func (task *Task) Start() {
 	status := "start"
+
+	length := len(task.History)
+	if length > 0 && task.History[length-1].Status == status {
+		err := errors.New("This task already has " + messages[status] + " status")
+		check(err)
+	}
+
 	event := Event{Status: status, Time: getCurrentDateTime()}
 
 	task.Status = status
@@ -65,7 +73,14 @@ func (task *Task) Start() {
 
 // Stop changes status to stopped
 func (task *Task) Stop() {
-	status := "stpp"
+	status := "stop"
+
+	length := len(task.History)
+	if length > 0 && task.History[length-1].Status == status {
+		err := errors.New("This task already has " + messages[status] + " status")
+		check(err)
+	}
+
 	event := Event{Status: status, Time: getCurrentDateTime()}
 
 	task.Status = status
