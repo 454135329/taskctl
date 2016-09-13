@@ -47,25 +47,22 @@ func (task *Task) Close() {
 
 // Start changes status to in progress
 func (task *Task) Start() {
-	status := "start"
-	task.Status = status
-	err := task.History.LogEvent(status)
+	task.Status = StartStatus
+	err := task.History.LogEvent(StartStatus)
 	check(err)
 }
 
 // Stop changes status to stopped
 func (task *Task) Stop() {
-	status := "stop"
-	task.Status = status
-	err := task.History.LogEvent(status)
+	task.Status = StopStatus
+	err := task.History.LogEvent(StopStatus)
 	check(err)
 }
 
 // Done changes status to done
 func (task *Task) Done() {
-	status := "done"
-	task.Status = status
-	err := task.History.LogEvent(status)
+	task.Status = DoneStatus
+	err := task.History.LogEvent(DoneStatus)
 	check(err)
 }
 
