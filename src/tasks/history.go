@@ -13,7 +13,7 @@ type Event struct {
 
 // History contains list of events
 type History struct {
-	events []Event
+	Events []Event
 }
 
 // LogEvent writes new event to history
@@ -24,51 +24,47 @@ func (history *History) LogEvent(status string) error {
 
 	event := Event{Status: status, Time: getCurrentDateTime()}
 
-	history.events = append(history.events, event)
+	history.Events = append(history.Events, event)
 
 	return nil
 }
 
 // GetLoggedTime returns logged time in seconds
-func (history History) GetLoggedTime() (int, error) {
+func (history History) GetLoggedTime() int {
 	history = history.fillHistoryGap()
-
-	if len(history.events)%2 != 0 {
-		return 0, errors.New("Wrong history records number")
-	}
 
 	loggedTime := 0
 
-	for i := 0; i < len(history.events); i += 2 {
-		startTime := history.events[i].Time
-		endTime := history.events[i+1].Time
+	for i := 0; i < len(history.Events); i += 2 {
+		startTime := history.Events[i].Time
+		endTime := history.Events[i+1].Time
 		timeDiff := endTime.Sub(startTime)
 
 		loggedTime += int(timeDiff.Seconds())
 	}
 
-	return loggedTime, nil
+	return loggedTime
 }
 
 func (history History) isNotEmpty() bool {
-	return len(history.events) != 0
+	return len(history.Events) != 0
 }
 
 func (history History) isInStatus(status string) bool {
-	length := len(history.events)
+	length := len(history.Events)
 
 	if length == 0 {
 		return false
 	}
 
-	return history.events[length-1].Status == status
+	return history.Events[length-1].Status == status
 }
 
 func (history History) fillHistoryGap() History {
 	if history.isInStatus("start") {
 		event := Event{Status: "tmp", Time: getCurrentDateTime()}
 
-		history.events = append(history.events, event)
+		history.Events = append(history.Events, event)
 	}
 
 	return history
