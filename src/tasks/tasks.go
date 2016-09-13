@@ -1,181 +1,165 @@
 package tasks
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
-	"os"
-	"os/user"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
 
-const (
-	// StartStatus represents status for started task
-	StartStatus = "START"
-	// StopStatus represents status for stopped task
-	StopStatus = "STOP"
-)
+// Event describes change of status
+type Event struct {
+	Status string
+	Time   time.Time
+}
+
+// Task is data structure to describe project task
+type Task struct {
+	Name    string
+	Status  string
+	History []Event
+}
 
 var messages = map[string]string{
-	"START": "In progress",
-	"STOP":  "Stopped",
-	"DONE":  "Completed",
+	"todo":  "To do",
+	"start": "In progress",
+	"stop":  "Stopped",
+	"done":  "Completed",
 }
 
-func check(err error) {
-	if err != nil {
-		panic(err)
+// OpenTask reads existing task or create new one
+func OpenTask(name string) Task {
+	path := getTaskPath(name)
+
+	if fileExists(path) {
+		file, _ := ioutil.ReadFile(path)
+
+		var task Task
+		json.Unmarshal(file, &task)
+
+		return task
+	}
+
+	return Task{Name: name, Status: "todo", History: []Event{}}
+}
+
+// Close writes changes to file
+func (task *Task) Close() {
+	path := getTaskPath(task.Name)
+	data, _ := json.Marshal(task)
+
+	_ = ioutil.WriteFile(path, data, 0644)
+}
+
+// Start changes status to in progress
+func (task *Task) Start() {
+	status := "start"
+
+	length := len(task.History)
+	if length > 0 && task.History[length-1].Status == status {
+		err := errors.New("This task already has " + messages[status] + " status")
+		check(err)
+	}
+
+	event := Event{Status: status, Time: getCurrentDateTime()}
+
+	task.Status = status
+	task.History = append(task.History, event)
+}
+
+// Stop changes status to stopped
+func (task *Task) Stop() {
+	status := "stop"
+
+	length := len(task.History)
+	if length > 0 && task.History[length-1].Status == status {
+		err := errors.New("This task already has " + messages[status] + " status")
+		check(err)
+	}
+
+	event := Event{Status: status, Time: getCurrentDateTime()}
+
+	task.Status = status
+	task.History = append(task.History, event)
+}
+
+// Done changes status to done
+func (task *Task) Done() {
+	status := "done"
+	task.Status = status
+
+	length := len(task.History)
+	if length > 0 && task.History[length-1].Status == status {
+		err := errors.New("This task already has " + messages[status] + " status")
+		check(err)
+	}
+
+	if length > 0 && task.History[length-1].Status == "stop" {
+		task.History[length-1].Status = status
+		return
+	}
+
+	event := Event{Status: status, Time: getCurrentDateTime()}
+
+	task.History = append(task.History, event)
+}
+
+// ToArray returns array with task name, status and logged time
+func (task Task) ToArray() []string {
+	return []string{
+		task.Name,
+		messages[task.Status],
+		formatDuration(task.getLoggedTime()),
 	}
 }
 
-func getCurrentDateTime() string {
-	return time.Now().Format(time.RFC3339)
-}
+func (task Task) fillHistoryGap() []Event {
+	history := task.History
 
-func parseDateTime(dateTime string) time.Time {
-	parsedTime, err := time.Parse(time.RFC3339, dateTime)
-	check(err)
-
-	return parsedTime
-}
-
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
-func getTasksDir() string {
-	usr, _ := user.Current()
-
-	return usr.HomeDir + "/.taskctl/tasks"
-}
-
-func getTaskPath(task string) string {
-	return getTasksDir() + "/" + task + ".txt"
-}
-
-func checkStatys(task string, status string) {
-	history := getHistory(task)
-	currStatus, _ := getCurrentStatus(history)
-
-	if currStatus == status {
-		err := errors.New("This task is already in " + status + " status")
-		panic(err)
-	}
-}
-
-func getHistory(task string) [][]string {
-	filename := getTaskPath(task)
-	content, err := ioutil.ReadFile(filename)
-	check(err)
-
-	lines := strings.Split(string(content), "\n")
-
-	if lines[len(lines)-1] == "" && len(lines) > 0 {
-		lines = lines[:len(lines)-1]
-	}
-
-	history := make([][]string, len(lines))
-
-	for i, status := range lines {
-		history[i] = strings.Split(status, "|")
+	if task.Status == "start" {
+		history = append(history, Event{"tmp", getCurrentDateTime()})
 	}
 
 	return history
 }
 
-func fillHistoryGap(history [][]string) [][]string {
-	currentStatus, _ := getCurrentStatus(history)
+func (task Task) getLoggedTime() int {
+	history := task.fillHistoryGap()
 
-	if currentStatus == StartStatus {
-		history = append(history, []string{StopStatus, getCurrentDateTime()})
-	}
-
-	return history
-}
-
-func getCurrentStatus(history [][]string) (string, string) {
-	status := history[len(history)-1]
-
-	return status[0], status[1]
-}
-
-func formatDuration(seconds int) string {
-	hours := seconds / 3600
-	minutes := seconds % 3600 / 60
-
-	return strconv.Itoa(hours) + " h " + strconv.Itoa(minutes) + " m"
-}
-
-func getSpentTime(history [][]string) int {
 	if len(history)%2 != 0 {
 		err := errors.New("Wrong history records number")
 		panic(err)
 	}
 
-	spentTime := 0
+	loggedTime := 0
 
 	for i := 0; i < len(history); i += 2 {
-		startTime := parseDateTime(history[i][1])
-		endTime := parseDateTime(history[i+1][1])
+		startTime := history[i].Time
+		endTime := history[i+1].Time
 		timeDiff := endTime.Sub(startTime)
 
-		spentTime += int(timeDiff.Seconds())
+		loggedTime += int(timeDiff.Seconds())
 	}
 
-	return spentTime
+	return loggedTime
 }
 
-// WriteStatus writes task status to file
-func WriteStatus(task string, status string) {
-	filename := getTaskPath(task)
-
-	if fileExists(filename) {
-		checkStatys(task, status)
-	} else if status == StopStatus {
-		err := errors.New("This task does not exist")
-		panic(err)
-	}
-
-	data := status + "|" + getCurrentDateTime() + "\n"
-
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	check(err)
-
-	defer f.Close()
-
-	_, err = f.WriteString(data)
-	check(err)
-}
-
-// ListTasks return list of all task with logged time
-func ListTasks() [][]string {
+// LoadTasks scans tasks storage and loads all tasks
+func LoadTasks() []Task {
 	files, err := ioutil.ReadDir(getTasksDir())
-	if err != nil {
-		log.Fatal(err)
+	check(err)
+
+	var tasks []Task
+
+	for _, file := range files {
+		fileName := file.Name()
+		fileExtension := filepath.Ext(fileName)
+		taskName := strings.TrimSuffix(fileName, fileExtension)
+
+		tasks = append(tasks, OpenTask(taskName))
 	}
 
-	data := make([][]string, len(files))
-
-	for i, file := range files {
-		filename := file.Name()
-		task := strings.TrimSuffix(filename, filepath.Ext(filename))
-
-		history := getHistory(task)
-		status, _ := getCurrentStatus(history)
-		history = fillHistoryGap(history)
-		spentTime := getSpentTime(history)
-
-		data[i] = []string{task, messages[status], formatDuration(spentTime)}
-	}
-
-	return data
+	return tasks
 }
