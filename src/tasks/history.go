@@ -27,7 +27,7 @@ type History struct {
 
 // LogEvent writes new event to history
 func (history *History) LogEvent(status string) error {
-	if history.isEmpty() && (status == StartStatus || status == StopStatus) {
+	if history.isEmpty() && (status == DoneStatus || status == StopStatus) {
 		return errors.New("The task status cannot be changed to " + messages[status] + " status")
 	}
 
