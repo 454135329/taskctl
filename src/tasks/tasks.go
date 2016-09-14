@@ -2,24 +2,16 @@ package tasks
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-	"time"
 )
-
-// Event describes change of status
-type Event struct {
-	Status string
-	Time   time.Time
-}
 
 // Task is data structure to describe project task
 type Task struct {
 	Name    string
 	Status  string
-	History []Event
+	History History
 }
 
 var messages = map[string]string{
@@ -42,7 +34,7 @@ func OpenTask(name string) Task {
 		return task
 	}
 
-	return Task{Name: name, Status: "todo", History: []Event{}}
+	return Task{Name: name, Status: "todo"}
 }
 
 // Close writes changes to file
@@ -55,55 +47,23 @@ func (task *Task) Close() {
 
 // Start changes status to in progress
 func (task *Task) Start() {
-	status := "start"
-
-	length := len(task.History)
-	if length > 0 && task.History[length-1].Status == status {
-		err := errors.New("This task already has " + messages[status] + " status")
-		check(err)
-	}
-
-	event := Event{Status: status, Time: getCurrentDateTime()}
-
-	task.Status = status
-	task.History = append(task.History, event)
+	task.Status = StartStatus
+	err := task.History.LogEvent(StartStatus)
+	check(err)
 }
 
 // Stop changes status to stopped
 func (task *Task) Stop() {
-	status := "stop"
-
-	length := len(task.History)
-	if length > 0 && task.History[length-1].Status == status {
-		err := errors.New("This task already has " + messages[status] + " status")
-		check(err)
-	}
-
-	event := Event{Status: status, Time: getCurrentDateTime()}
-
-	task.Status = status
-	task.History = append(task.History, event)
+	task.Status = StopStatus
+	err := task.History.LogEvent(StopStatus)
+	check(err)
 }
 
 // Done changes status to done
 func (task *Task) Done() {
-	status := "done"
-	task.Status = status
-
-	length := len(task.History)
-	if length > 0 && task.History[length-1].Status == status {
-		err := errors.New("This task already has " + messages[status] + " status")
-		check(err)
-	}
-
-	if length > 0 && task.History[length-1].Status == "stop" {
-		task.History[length-1].Status = status
-		return
-	}
-
-	event := Event{Status: status, Time: getCurrentDateTime()}
-
-	task.History = append(task.History, event)
+	task.Status = DoneStatus
+	err := task.History.LogEvent(DoneStatus)
+	check(err)
 }
 
 // ToArray returns array with task name, status and logged time
@@ -111,39 +71,8 @@ func (task Task) ToArray() []string {
 	return []string{
 		task.Name,
 		messages[task.Status],
-		formatDuration(task.getLoggedTime()),
+		formatDuration(task.History.GetLoggedTime()),
 	}
-}
-
-func (task Task) fillHistoryGap() []Event {
-	history := task.History
-
-	if task.Status == "start" {
-		history = append(history, Event{"tmp", getCurrentDateTime()})
-	}
-
-	return history
-}
-
-func (task Task) getLoggedTime() int {
-	history := task.fillHistoryGap()
-
-	if len(history)%2 != 0 {
-		err := errors.New("Wrong history records number")
-		panic(err)
-	}
-
-	loggedTime := 0
-
-	for i := 0; i < len(history); i += 2 {
-		startTime := history[i].Time
-		endTime := history[i+1].Time
-		timeDiff := endTime.Sub(startTime)
-
-		loggedTime += int(timeDiff.Seconds())
-	}
-
-	return loggedTime
 }
 
 // LoadTasks scans tasks storage and loads all tasks
