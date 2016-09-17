@@ -3,6 +3,7 @@ package tasks
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -64,6 +65,15 @@ func (task *Task) Done() {
 	task.Status = DoneStatus
 	err := task.History.LogEvent(DoneStatus)
 	check(err)
+}
+
+// Remove deletes task from file system
+func (task Task) Remove() {
+	path := getTaskPath(task.Name)
+
+	if fileExists(path) {
+		os.Remove(path)
+	}
 }
 
 // ToArray returns array with task name, status and logged time
