@@ -59,6 +59,20 @@ func main() {
 			},
 		},
 		{
+			Name:  "remove",
+			Usage: "remove a task",
+			Action: func(c *cli.Context) error {
+				name := c.Args().First()
+
+				task := tasks.OpenTask(name)
+
+				task.Remove()
+
+				fmt.Println("completed task: ", name)
+				return nil
+			},
+		},
+		{
 			Name:  "list",
 			Usage: "list all tasks",
 			Action: func(c *cli.Context) error {
