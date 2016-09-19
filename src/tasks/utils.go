@@ -8,12 +8,6 @@ import (
 	"time"
 )
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func getCurrentDateTime() time.Time {
 	return time.Now()
 }
