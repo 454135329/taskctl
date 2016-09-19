@@ -26,16 +26,16 @@ var messages = map[string]string{
 func OpenTask(name string) Task {
 	path := getTaskPath(name)
 
-	if fileExists(path) {
-		file, _ := ioutil.ReadFile(path)
-
-		var task Task
-		json.Unmarshal(file, &task)
-
-		return task
+	if !fileExists(path) {
+		return Task{Name: name, Status: "todo"}
 	}
 
-	return Task{Name: name, Status: "todo"}
+	file, _ := ioutil.ReadFile(path)
+
+	var task Task
+	json.Unmarshal(file, &task)
+
+	return task
 }
 
 // Close writes changes to file
