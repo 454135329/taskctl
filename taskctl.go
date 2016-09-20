@@ -19,10 +19,16 @@ func main() {
 			Action: func(c *cli.Context) error {
 				name := c.Args().First()
 
-				task := tasks.OpenTask(name)
+				task, err := tasks.OpenTask(name)
+				if err != nil {
+					return err
+				}
 				defer task.Close()
 
-				task.Start()
+				err = task.Start()
+				if err != nil {
+					return err
+				}
 
 				fmt.Println("started task: ", name)
 				return nil
@@ -34,10 +40,16 @@ func main() {
 			Action: func(c *cli.Context) error {
 				name := c.Args().First()
 
-				task := tasks.OpenTask(name)
+				task, err := tasks.OpenTask(name)
+				if err != nil {
+					return err
+				}
 				defer task.Close()
 
-				task.Stop()
+				err = task.Stop()
+				if err != nil {
+					return err
+				}
 
 				fmt.Println("stopped task: ", name)
 				return nil
@@ -49,10 +61,16 @@ func main() {
 			Action: func(c *cli.Context) error {
 				name := c.Args().First()
 
-				task := tasks.OpenTask(name)
+				task, err := tasks.OpenTask(name)
+				if err != nil {
+					return err
+				}
 				defer task.Close()
 
-				task.Done()
+				err = task.Done()
+				if err != nil {
+					return err
+				}
 
 				fmt.Println("completed task: ", name)
 				return nil
@@ -64,11 +82,14 @@ func main() {
 			Action: func(c *cli.Context) error {
 				name := c.Args().First()
 
-				task := tasks.OpenTask(name)
+				task, err := tasks.OpenTask(name)
+				if err != nil {
+					return err
+				}
 
 				task.Remove()
 
-				fmt.Println("completed task: ", name)
+				fmt.Println("removed task: ", name)
 				return nil
 			},
 		},
@@ -81,7 +102,12 @@ func main() {
 				table.SetRowSeparator("-")
 				table.SetHeader([]string{"Task", "Status", "Logged time"})
 
-				for _, task := range tasks.LoadTasks() {
+				tasks, err := tasks.LoadTasks()
+				if err != nil {
+					return err
+				}
+
+				for _, task := range tasks {
 					table.Append(task.ToArray())
 				}
 
